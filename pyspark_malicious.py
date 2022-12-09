@@ -14,10 +14,10 @@ from pyspark.sql import SparkSession, functions
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
 # Charger les données à partir d'un fichier CSV
-data = spark.read.csv("url_data.csv", header=True, inferSchema=True)
+data = spark.read.csv("urldata.csv", header=True, inferSchema=True)
 
 # convert the Class column to a numeric type
-data = data.withColumn("Class", functions.when(data["Class"] == "good", 0)
+data = data.withColumn("Class", functions.when(data["Class"] == "benign", 0)
                                          .otherwise(1))
 
 # Décomposer les URL en mots individuels
@@ -52,52 +52,5 @@ evaluator = MulticlassClassificationEvaluator(labelCol="Class", predictionCol="p
 print("Accuracy = %g" % evaluator.evaluate(predictions, {evaluator.metricName: "accuracy"}))
 print("F1-Score = %g" % evaluator.evaluate(predictions, {evaluator.metricName: "f1"}))
 
-# Afficher les prédictions en utilisant un diagramme à barres
-predictions.select("Class", "prediction").show()
-
-
-'''
-# Sélectionner les colonnes d'entrée des données d'entraînement
-input_cols = ["URLs"]
-train_input = train_data.select(input_cols)
-
-# Sélectionner la colonne de sortie des données d'entraînement
-output_col = "target"
-train_output = train_data.select(output_col)
-
-# Sélectionner les colonnes d'entrée des données de test
-test_input = test_data.select(input_cols)
-
-# Sélectionner la colonne de sortie des données de test
-test_output = test_data.select(output_col)
-
-from pyspark.ml.linalg import Vector
-from pyspark.ml.feature import VectorAssembler
-from pyspark.ml.feature import StringIndexer
-
-# Assembler les colonnes d'entrée en un vecteur de caractéristiques
-assembler = VectorAssembler(inputCols=input_cols, outputCol="features")
-train_input = assembler.transform(train_input)
-test_input = assembler.transform(test_input)
-
-# Indexer la colonne de sortie en valeurs numériques
-indexer = StringIndexer(inputCol=output_col, outputCol="label")
-train_output = indexer.fit(train_output).transform(train_output)
-test_output = indexer.fit(test_output).transform(test_output)
-
-# Créer un objet RandomForestClassifier
-classifier = RandomForestClassifier(labelCol="label", featuresCol="features")
-
-# Entraîner le modèle sur les données d'entraînement
-model = classifier.fit(train_input)
-
-# Faire des prédictions sur les données de test
-predictions = model.transform(test_input)
-
-# Calculer l'erreur de classification
-evaluator = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="accuracy")
-accuracy = evaluator.evaluate(predictions)
-print("Accuracy = %g" % (accuracy))
-
 # Afficher la matrice de confusion
-predictions.groupBy("label", "prediction").count().show()'''
+predictions.groupBy("Class", "prediction").count().show()
